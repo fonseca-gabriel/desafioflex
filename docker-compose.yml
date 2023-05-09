@@ -31,8 +31,9 @@ services:
       MYSQL_PASSWORD: senha
       MYSQL_HOST: '%'
     volumes:
-      - ./data:/var/lib/mysql
-      - ./my.cnf:/etc/mysql/conf.d/meu.cnf
+      # - ./data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      # - ./my.cnf:/etc/mysql/conf.d/meu.cnf
     ports:
       - '3306:3306'
     expose:

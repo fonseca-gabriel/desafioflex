@@ -9,8 +9,8 @@ then
       sleep 1
     done
     # Somente na primeira vez, para construção do banco de dados
-    # rm -rf migrations
-    # flask db init && flask db migrate -m 'Initial migration' && flask db upgrade
+    rm -rf migrations
+    flask db init && flask db migrate -m 'Initial migration' && flask db upgrade
     echo "MySQL started"
 fi
 

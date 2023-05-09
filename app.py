@@ -1,22 +1,21 @@
+import re
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
-from marshmallow import Schema, fields
-from flask_marshmallow import Marshmallow
-import re
+from marshmallow import fields, Schema, ValidationError
+from marshmallow.validate import Length
 from flask_migrate import Migrate
-# import os
 
 
 app = Flask(__name__)
-# os.environ['FLASK_APP'] = 'app'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@127.0.0.1:3306/desafioflex'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@db:3306/desafioflex'
+# os.environ['FLASK_APP'] = 'app'  # a princípio não é necessário
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@db:3306/desafioflex'  # quando usa docker compose/mysql
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@127.0.0.1:3306/desafioflex'  # quando usa mysql
 app.app_context().push()  # ver porque é necessário
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificates.sqlite3'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificates.sqlite3'  # quando usa sqlite3
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # sql-migrate
-ma = Marshmallow(app)
 
 
 def define_expirated_at(expiration):
@@ -52,16 +51,21 @@ class Group(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class CertificateSchema(Schema):
-    username = fields.Str()
+def test_validate(value):
+    if len(value) > 4:
+        raise ValidationError('Quantity must be greater than 0.')
 
+
+class CertificateSchema(Schema):
+    # username = fields.Str(required=True, validate=validate.Length(max=4, error='WEojwef'))
+    username = fields.Str(validate=test_validate)
     groups = fields.Method("get_groups_ids")
+
 
     def get_groups_ids(self, certificate):
         return [group.id for group in certificate.groups]
 
     class Meta:
-        model = Certificate
         fields = (
             'id',
             'username',
@@ -76,16 +80,22 @@ class CertificateSchema(Schema):
         )
 
 
-class GroupSchema(ma.Schema):
+class GroupSchema(Schema):
+
+    id = fields.Integer(dump_only=True)
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
+    name = fields.String(required=True, validate=Length(max=30))
+    description = fields.String(required=True, validate=Length(max=255))
+
     class Meta:
-        model = Group
         fields = ('id', 'name', 'description', 'created_at', 'updated_at')
 
 
 certificate_schema = CertificateSchema()
 certificates_schema = CertificateSchema(many=True)
-group_schema = GroupSchema()
-groups_schema = GroupSchema(many=True)
+# group_schema = GroupSchema()
+# groups_schema = GroupSchema(many=True)
 
 
 # Rotas da API
@@ -124,7 +134,7 @@ def list_certificates():
 def list_groups():
     with app.app_context():
         groups = Group.query.all()
-        groups_serialized = groups_schema.dump(groups)
+        groups_serialized = GroupSchema(many=True).dump(groups)
         return jsonify(groups_serialized), 200
 
 
@@ -173,17 +183,17 @@ def create_certificate():
 @app.route('/grupos', methods=['POST'])
 def create_group():
     with app.app_context():
-        group_data = request.json
 
-        group = Group(
-            name=group_data['name'],
-            description=group_data['description'],
-        )
+        try:
+            group_data = GroupSchema().load(request.json)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
 
+        group = Group(**group_data)
         db.session.add(group)
         db.session.commit()
 
-        group_serialized = group_schema.dump(group)
+        group_serialized = GroupSchema().dump(group)
         return jsonify(group_serialized), 201
 
 
@@ -193,7 +203,8 @@ def get_certificate(cert_id):
         certificate = db.session.get(Certificate, cert_id)  # = Certificate.query.get(cert_id)
 
         if certificate:
-            return certificate_schema.jsonify(certificate)
+            certificate_serialized = CertificateSchema(many=False).dump(certificate)
+            return jsonify(certificate_serialized), 200
         return make_response(jsonify({'message': 'certificate not found'}), 404)
 
     except Exception as err:
@@ -207,7 +218,9 @@ def get_group(group_id):
         group = db.session.get(Group, group_id)  # = Group.query.get(group_id)
 
         if group:
-            return group_schema.jsonify(group)
+            group_serialized = GroupSchema(many=False).dump(group)
+            return jsonify(group_serialized), 200
+
         return make_response(jsonify({'message': 'group not found'}), 404)
 
     except Exception as err:
@@ -221,7 +234,8 @@ def update_certificate(cert_id):
         certificate = db.session.get(Certificate, cert_id)  # = Certificate.query.get(cert_id)
 
         if certificate:
-            data = request.get_json()
+            # data = request.get_json()
+            data = request.json
             certificate.username = data['username']
             certificate.name = data['name']
             certificate.description = data['description']
@@ -242,11 +256,24 @@ def update_group(group_id):
         group = db.session.get(Group, group_id)  # = Group.query.get(group_id)
 
         if group:
-            data = request.get_json()
-            group.name = data['name']
-            group.description = data['description']
+
+            data = request.json
+
+            try:
+                GroupSchema(partial=True).load(data)
+
+            except ValidationError as err:
+                return make_response(jsonify(err.messages), 400)
+
+            if data.get('name'):
+                group.name = data.get('name')
+
+            if data.get('description'):
+                group.description = data.get('description')
+
             db.session.commit()
             return make_response(jsonify({'message': 'group updated'}), 200)
+
         return make_response(jsonify({'message': 'group not found'}), 404)
 
     except Exception as err:
