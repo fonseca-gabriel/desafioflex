@@ -68,7 +68,7 @@ class GroupSchema(Schema):
 
 class CertificateSchema(Schema):
 
-    def get_groups_ids(self, value):
+    def dump_groups_ids(self, value):
         return [group.id for group in value.groups]
 
     def load_groups_ids(self, value):
@@ -78,10 +78,10 @@ class CertificateSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     expiration_at = fields.DateTime()
-    username = fields.Str(required=True, validate=And(Length(max=255), Regexp(regex=r'^[a-zA-Z0-9]+$')))
+    username = fields.Str(required=True, validate=And(Length(max=30), Regexp(regex=r'^[a-zA-Z0-9]+$')))
     name = fields.Str(required=True, validate=Length(max=255))
     expiration = fields.Integer(required=True, validate=Range(10, 3650))
-    groups = fields.Method("get_groups_ids", "load_groups_ids")
+    groups = fields.Method("dump_groups_ids", "load_groups_ids")
 
     class Meta:
         fields = (
@@ -145,6 +145,9 @@ def create_certificate():
             print(f"Erro no create_certificate: {err.messages}")
             print(f"Campos ok no create_certificate: {err.data}")
             return make_response(jsonify(err.messages), 400)
+
+        if Certificate.query.filter_by(username=certificate_data['username']).first():
+            return make_response(jsonify({'message': 'username already exists.'}), 400)
 
         group_ids = [int(group_id) for group_id in certificate_data['groups']]
         groups = Group.query.filter(Group.id.in_(group_ids)).all()
@@ -218,13 +221,28 @@ def update_certificate(cert_id):
         certificate = db.session.get(Certificate, cert_id)
 
         if certificate:
+
             data = request.json
+
+            try:
+                CertificateSchema(partial=True).load(data)
+
+            except ValidationError as err:
+                return make_response(jsonify(err.messages), 400)
+
+            # Verificar se deve permitir a troca do username
+            if Certificate.query.filter_by(username=data['username']).first():
+                return make_response(jsonify({'message': 'username already exists.'}), 400)
+
             certificate.username = data['username']
             certificate.name = data['name']
             certificate.description = data['description']
+
             groups = request.json['groups']
             certificate.groups = Group.query.filter(Group.id.in_(groups)).all()
+
             db.session.commit()
+
             return make_response(jsonify({'message': 'certificate updated'}), 200)
         return make_response(jsonify({'message': 'certificate not found'}), 404)
 
