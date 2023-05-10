@@ -142,8 +142,6 @@ def create_certificate():
         try:
             certificate_data = CertificateSchema().load(request.json)
         except ValidationError as err:
-            print(f"Erro no create_certificate: {err.messages}")
-            print(f"Campos ok no create_certificate: {err.data}")
             return make_response(jsonify(err.messages), 400)
 
         if Certificate.query.filter_by(username=certificate_data['username']).first():
@@ -175,6 +173,9 @@ def create_group():
             group_data = GroupSchema().load(request.json)
         except ValidationError as err:
             return jsonify(err.messages), 400
+
+        if Group.query.filter_by(name=group_data['name']).first():
+            return make_response(jsonify({'message': 'group already exists.'}), 400)
 
         group = Group(**group_data)
         db.session.add(group)
@@ -265,6 +266,10 @@ def update_group(group_id):
 
             except ValidationError as err:
                 return make_response(jsonify(err.messages), 400)
+
+            # Verifica se o grupo já existe
+            if Group.query.filter_by(name=data.get('name')).first():
+                return make_response(jsonify({'message': 'group already exists.'}), 400)
 
             if data.get('name'):
                 group.name = data.get('name')
