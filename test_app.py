@@ -1,4 +1,5 @@
 import pytest
+from shutil import copy
 from app import app as flask_app
 
 
@@ -10,3 +11,4 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+

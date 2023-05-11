@@ -6,18 +6,28 @@ from marshmallow.validate import Length, And, Regexp, Range
 from flask_migrate import Migrate
 
 
+# mysql ou sqlite3
+database = 'sqlite3'
+
+# local ou docker
+mysql_host = 'local'
+
 app = Flask(__name__)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@db:3306/desafioflex'  # quando usa docker compose/mysql
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@127.0.0.1:3306/desafioflex'  # quando usa mysql
-app.app_context().push()  # ver porque é necessário
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificates.sqlite3'  # quando usa sqlite3
-db = SQLAlchemy(app)
+if database == "sqlite3":
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificates.sqlite3'
+    db = SQLAlchemy(app)
+    app.app_context().push()
+    db.create_all()
+elif database == "mysql":
+    if mysql_host == 'local':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@127.0.0.1:3306/desafioflex'
+    elif mysql_host == 'docker':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@db:3306/desafioflex'
+    db = SQLAlchemy(app)
+    app.app_context().push()
+
 migrate = Migrate(app, db)  # sql-migrate
-
-
-def define_expirated_at(expiration):
-    return datetime.utcnow() + timedelta(days=int(expiration))
 
 
 cartificate_group = db.Table(
@@ -27,6 +37,7 @@ cartificate_group = db.Table(
 )
 
 
+# Models
 class Certificate(db.Model):
     __tablename__ = 'certificates'
     id = db.Column(db.Integer, primary_key=True)
@@ -39,6 +50,9 @@ class Certificate(db.Model):
     expirated_at = db.Column(db.DateTime(timezone=True))
     groups = db.relationship('Group', secondary=cartificate_group, backref=db.backref('certificados', lazy='dynamic'))
 
+    def __repr__(self):
+        return f"<cert: {self.username}>"
+
 
 class Group(db.Model):
     __tablename__ = 'groups'
@@ -49,11 +63,7 @@ class Group(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-def test_validate(value):
-    if len(value) > 4:
-        raise ValidationError('Quantity must be greater than 0.')
-
-
+# Marshmallow schemas
 class GroupSchema(Schema):
 
     id = fields.Integer(dump_only=True)
@@ -98,41 +108,44 @@ class CertificateSchema(Schema):
         )
 
 
+def define_expirated_at(expiration):
+    return datetime.utcnow() + timedelta(days=int(expiration))
+
+
+# Rotas/endpoints
 @app.route('/certificados', methods=['GET'])
 def list_certificates():
 
-    with app.app_context():
-        sort_param = request.args.get('sort')
-        filter_name_param = request.args.get('name')
-        filter_username_param = request.args.get('username')
-        certificates_query = Certificate.query
+    sort_param = request.args.get('sort')
+    filter_name_param = request.args.get('name')
+    filter_username_param = request.args.get('username')
+    certificates_query = Certificate.query
 
-        # Filter
-        if filter_name_param:
-            certificates_query = certificates_query.filter(Certificate.name.ilike(f'%{filter_name_param}%'))
+    # Filter
+    if filter_name_param:
+        certificates_query = certificates_query.filter(Certificate.name.ilike(f'%{filter_name_param}%'))
 
-        if filter_username_param:
-            certificates_query = certificates_query.filter(Certificate.username.ilike(f'%{filter_username_param}%'))
+    if filter_username_param:
+        certificates_query = certificates_query.filter(Certificate.username.ilike(f'%{filter_username_param}%'))
 
-        # Sort
-        if sort_param == 'username':
-            certificates_query = certificates_query.order_by(Certificate.username.asc())
+    # Sort
+    if sort_param == 'username':
+        certificates_query = certificates_query.order_by(Certificate.username.asc())
 
-        if sort_param == 'name':
-            certificates_query = certificates_query.order_by(Certificate.name.asc())
+    if sort_param == 'name':
+        certificates_query = certificates_query.order_by(Certificate.name.asc())
 
-        certificates = certificates_query.all()
-        certificates_serialized = CertificateSchema(many=True).dump(certificates)
+    certificates = certificates_query.all()
+    certificates_serialized = CertificateSchema(many=True).dump(certificates)
 
-        return jsonify(certificates_serialized)
+    return jsonify(certificates_serialized)
 
 
 @app.route('/grupos', methods=['GET'])
 def list_groups():
-    with app.app_context():
-        groups = Group.query.all()
-        groups_serialized = GroupSchema(many=True).dump(groups)
-        return jsonify(groups_serialized), 200
+    groups = Group.query.all()
+    groups_serialized = GroupSchema(many=True).dump(groups)
+    return jsonify(groups_serialized), 200
 
 
 @app.route('/certificados', methods=['POST'])
@@ -316,5 +329,4 @@ def delete_group(group_id):
 
 
 if __name__ == "__main__":
-    db.create_all()  # necessário adicionar se for utilizar o SQLite3
     app.run(debug=True)
