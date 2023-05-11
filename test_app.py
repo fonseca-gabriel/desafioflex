@@ -101,3 +101,73 @@ def test_certificate_expiration(client):
     certificate = Certificate.query.filter_by(username=data['username']).first()
     assert certificate is not None
     assert certificate.expirated_at is not None
+
+
+# Schemas
+def test_certificate_schema_dump():
+    certificate = Certificate(
+        id=1,
+        username="user1",
+        name="certificate1",
+        description="This is a test certificate",
+        expiration=365
+    )
+    schema = CertificateSchema()
+    result = schema.dump(certificate)
+    assert result == {
+        "id": 1,
+        "username": "user1",
+        "name": "certificate1",
+        "description": "This is a test certificate",
+        "expiration": 365,
+        "expirated_at": certificate.expirated_at,
+        "updated_at": certificate.updated_at,
+        "created_at": None
+    }
+
+
+def test_certificate_schema_load():
+    data = {
+        "username": "user1",
+        "name": "certificate1",
+        "description": "This is a test certificate",
+        "expiration": 365
+    }
+    schema = CertificateSchema()
+    result = schema.load(data)
+    assert result['username'] == data['username']
+    assert result['name'] == data['name']
+    assert result['description'] == data['description']
+    assert result['expiration'] == data['expiration']
+
+
+class CustomGroupSchema(GroupSchema):
+    class Meta:
+        exclude = ('created_at', 'updated_at')
+
+
+def test_group_schema_dump():
+    group = Group(
+        id=1,
+        name="group1",
+        description="This is a test group"
+    )
+    schema = CustomGroupSchema()
+    result = schema.dump(group)
+    assert result == {
+        'id': 1,
+        'name': 'group1',
+        'description': 'This is a test group'
+    }
+
+
+def test_group_schema_load():
+    data = {
+        "name": "group1",
+        "description": "This is a test group"
+    }
+    schema = GroupSchema()
+    result = schema.load(data)
+    assert result['name'] == data['name']
+    assert result['description'] == data['description']
+

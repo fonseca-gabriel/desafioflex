@@ -87,7 +87,7 @@ class CertificateSchema(Schema):
     id = fields.Integer(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
-    expiration_at = fields.DateTime()
+    expirated_at = fields.DateTime()
     username = fields.Str(required=True, validate=And(Length(max=30), Regexp(regex=r'^[a-zA-Z0-9]+$')))
     name = fields.Str(required=True, validate=Length(max=255))
     expiration = fields.Integer(required=True, validate=Range(10, 3650))
