@@ -16,6 +16,12 @@ O projeto foi desenvolvido de forma a ser executado utilizando diferentes cenár
 
 Para facilitar a execução nesses diferentes cenários, serão criados tópicos específicos para cada um deles.
 
+As bibliotecas do projeto pode ser instaladas através do `pip`, preferencialmente dentro de um ambiente virtual:
+
+```
+pip install -r requirements.txt
+```
+
 
 ### Estrutura de arquivos
 
@@ -273,4 +279,4 @@ Alguns ajustes e implementações ainda carecem de finalização. Seguem alguns 
 - Ainda a respeito da utilização do env file, torna a publicação/compartilhamento do projeto mais seguro, mantendos senhas e dados de acessos nesse arquivo, que seria excluído do compartilhamento (incluído no .gitignore, poe exemplo).
 - Tratamento correto para as questões que envolvem o timezone.
 
-
+Em função do propósito específico do projeto, não foram abordatos alguns itens básicos, como a criação de ambiente virtual Python e a instalação dos recursos e bibliotecas necessárias para execução do projeto.
