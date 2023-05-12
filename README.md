@@ -277,6 +277,7 @@ Alguns ajustes e implementações ainda carecem de finalização. Seguem alguns 
 - Utilizar algum processo automatizado para realização dos testes, preferencialmente junto à uma estrutura de CI/CD, como o GitHub Actions.
 - Utilização de arquivo com variáveis de ambiente para facilitar a execução e deploy do projeto em diferentes circunstâncias (desenvolvimento, teste, diferentes bases de dados, diferentes infraestruturas, etc).
 - Ainda a respeito da utilização do env file, torna a publicação/compartilhamento do projeto mais seguro, mantendos senhas e dados de acessos nesse arquivo, que seria excluído do compartilhamento (incluído no .gitignore, poe exemplo).
+- Segmentação da aplicação em arquivos diferentes, para melhor organização e facilidade de manutenção.
 - Tratamento correto para as questões que envolvem o timezone.
 
 Em função do propósito específico do projeto, não foram abordatos alguns itens básicos, como a criação de ambiente virtual Python e a instalação dos recursos e bibliotecas necessárias para execução do projeto.
