@@ -69,6 +69,9 @@ Aplica a migração para criar as tabelas no banco de dados.
 
 ##### Estrutura da base de dados
 
+Para efeitos de melhor compreensão, segue a estrutura da base de dados utilizada no projeto:
+
+
 ```
 mysql> show tables;
 +-----------------------+
@@ -163,18 +166,56 @@ Já para utilizá-lo dentro da estrutura do docker compose, a varíavel deve ser
 mysql_host = 'docker'
 ```
 
-## Testes
+## Execução da aplicação
+Ajustados os parâmetros para definição do banco de dados, é possível, portanto, executar o projeto em alguns cenários diferentes.
 
-A cobertura de testes ainda é limitada. A mesma deve ser executada com o `pytest`, executando o comando na pasta raiz do projeto, onde encontra-se o arquivo `test_app.py`, responsável pelos mesmos.
+Em ambos os casos pode-se utilizar o script `create_test_database.py` para popular alguns dados iniciais de teste na base de dados:
 
 ```commandline
+$ python create_test_database.py 
+Apagando dados do banco...
+Criando novo banco de dados...
+Criando grupos...
+Adicionando grupos...
+Criando certificados...
+Adicionando certificados...
+Salvando dados no banco de dados...
+Dados populados com sucesso!
+
+```
+
+O script criará 4 grupos e 4 certificados de teste, de modo a facilitar a visualização do projeto em execuação em um primeiro momento.
+
+### Executando localmente, stand-alone
+
+Para executar o projeto localmente, basta rodar a aplicação manualmente, independentemente do banco de dados selecionado:
+
+```python app.py```
+
+*PS: para utilizar o banco de dados MySQL localmente é necessário que o mesmo já esteja inicializado e rodando na porta 3306. Além disso o procedimento de migração deve ter sido executado, de modo a criar o banco de dados, conforme descrito no tópico "Base de dado/MySQL"* 
+
+### Executando com docker-compose, localmente
+
+Para utilizar e estrutura "dockerizada", vale reforçar a necessidade das variáveis da aplicação estarem setadas da seguinte maneira:
+
+```
+database = 'mysql'
+mysql_host = 'docker'
+```
+
+
+
+## Testes
+A cobertura de testes ainda é limitada. A mesma deve ser executada com o `pytest`, executando o comando na pasta raiz do projeto, onde encontra-se o arquivo `test_app.py`, responsável pelos mesmos.
+
+```
 pytest
 ```
 
 Outras considerações a respeito dos testes foram adicionadas no tópico de pendências e melhorias.
 
-## Docker compose
 
+## Docker compose
 Para facilitar o deploy nos mais variados ambientes, a aplicação e serviços complementares foram estruturados em containers docker e relacionados através do docker composer (vide arquivo `docker-compose.yml`).
 
 Nessa estrutura três serviços foram definidos:
@@ -182,6 +223,7 @@ Nessa estrutura três serviços foram definidos:
 - **web**: Utiliza a imagem `python:3.10-alpine3.17`, definida em um Dockerfile. Container responsável por rodar a aplicação, servida através do serviço `guinicorn`. 
 - **nginx**: Realiza o proxy reverso dos acessos aos endpoints da API. Utiliza a imagem `nginx:1.23.4-bullseye`, construída a partir de um Dockerfile.  
 - **db**: MySQL, utilizando a imagem `mysql:8.0`. As variáveis de ambiente usadas pela imagem foram definidas no próprio arquivo do docker compose.
+
 
 ## Considerações
 

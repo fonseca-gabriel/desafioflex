@@ -18,7 +18,7 @@ if database == "sqlite3":
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///certificates.sqlite3'
     db = SQLAlchemy(app)
     app.app_context().push()
-    db.create_all()
+
 elif database == "mysql":
     if mysql_host == 'local':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://gabriel:senha@127.0.0.1:3306/desafioflex'
@@ -329,4 +329,6 @@ def delete_group(group_id):
 
 
 if __name__ == "__main__":
+    if database == "sqlite3":
+        db.create_all()
     app.run(debug=True)
