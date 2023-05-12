@@ -133,6 +133,7 @@ dmypy.json
 *.notes
 old/
 bkp/
+deploy_on_docker_remotely.sh
 
 # MySQL
 data/

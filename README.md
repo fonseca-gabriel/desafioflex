@@ -194,7 +194,7 @@ Para executar o projeto localmente, basta rodar a aplicação manualmente, indep
 
 *PS: para utilizar o banco de dados MySQL localmente é necessário que o mesmo já esteja inicializado e rodando na porta 3306. Além disso o procedimento de migração deve ter sido executado, de modo a criar o banco de dados, conforme descrito no tópico "Base de dado/MySQL"* 
 
-### Executando com docker-compose, localmente
+### Executando com docker compose, localmente
 
 Para utilizar e estrutura "dockerizada", vale reforçar a necessidade das variáveis da aplicação estarem setadas da seguinte maneira:
 
@@ -203,7 +203,35 @@ database = 'mysql'
 mysql_host = 'docker'
 ```
 
+A seguinte sequência de comandos para uma instância já iniciada, cria e inicializa o ambiente com docker compose localmente:
 
+```
+docker compose --verbose down
+docker compose --verbose up -d --build
+```
+
+Caso deseje popular alguns dados de teste no banco de dados, pode-se utilizar o comando abaixo:
+```
+docker compose --verbose exec web python create_test_database.py
+```
+*PS: o comando acima zera qualquer dado presente na base e então popula novos dados.*
+
+### Executando com docker compose, remotamente
+
+É possível ainda subir ainda essa mesma estrutura com o docker compose em um servidor remoto.
+
+Para isso basta utilizar a mesma sequência de comandos, porém utilizando em conjunto com a variável de ambiente "DOCKER_HOST", com os dados do servidor docker remoto.
+
+Segue um exemplo de como pode ser executado ou adicionanos os dados em um shell script para facilitar a execução:
+
+```
+HOST="200.200.200.10"
+USER="usuario"
+
+DOCKER_HOST="ssh://${USER}@${HOST}" docker compose --verbose down
+DOCKER_HOST="ssh://${USER}@${HOST}" docker compose --verbose up -d --build
+DOCKER_HOST="ssh://${USER}@${HOST}" docker compose --verbose exec web python create_test_database.py
+```
 
 ## Testes
 A cobertura de testes ainda é limitada. A mesma deve ser executada com o `pytest`, executando o comando na pasta raiz do projeto, onde encontra-se o arquivo `test_app.py`, responsável pelos mesmos.

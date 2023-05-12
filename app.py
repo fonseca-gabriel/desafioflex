@@ -7,7 +7,7 @@ from flask_migrate import Migrate
 
 
 # mysql ou sqlite3
-database = 'sqlite3'
+database = 'mysql'
 
 # local ou docker
 mysql_host = 'docker'
