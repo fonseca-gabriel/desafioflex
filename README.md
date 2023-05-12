@@ -133,13 +133,45 @@ mysql> desc desafioflex.certificate_group;
 
 ### Selecionando base de dados e ambiente de deploy
 
-### Ambiente de desenvolvimento, com SQLite3
+O tipo de base de dados utilizado pode ser escolhido entre MySQL ou SQLite3.
 
-### Ambiente de desenvolvimento, com MySQL
+Para optar por um ou outro, basta alterar a variável `database` no início da aplicação (`app.py`).
 
-### Ambiente de produção, com MySQL e docker compose
+#### SQLite3
+
+Caso deseje utilizar o **SQLite3**, a variável deve ser definida para a string 'sqlite3':
+```
+database = 'sqlite3'
+```
+
+
+#### MySQL
+Para utilizar o **MySQL**, a variável `database` recebe a string 'mysql':
+```
+database = 'mysql'
+```
+
+No caso do MySQL pode-se ainda optar por utilizá-lo em uma versão stand-alone, de modo que o banco de dados seja executado na máquina local e em sua porta padrão: `127.0.0.1:3306`.
+
+Para utilizar o MySQL localmente, basta alterar a variável `mysql_host` para o valor 'local':
+```
+mysql_host = 'local'
+```
+
+Já para utilizá-lo dentro da estrutura do docker compose, a varíavel deve ser alterado para 'docker':
+```
+mysql_host = 'docker'
+```
 
 ## Testes
+
+A cobertura de testes ainda é limitada. A mesma deve ser executada com o `pytest`, executando o comando na pasta raiz do projeto, onde encontra-se o arquivo `test_app.py`, responsável pelos mesmos.
+
+```commandline
+pytest
+```
+
+Outras considerações a respeito dos testes foram adicionadas no tópico de pendências e melhorias.
 
 ## Docker compose
 
@@ -161,7 +193,9 @@ Devido a limitação de tempo e minha falta de experiência com as tecnologias u
 
 Alguns ajustes e implementações ainda carecem de finalização. Seguem alguns desses pontos:
 
-- Implementação de mais testes.
+- Implementação de mais testes, de preferência seguindo a prática de desenvolvimento orientado por testes.
+- Utilizar algum processo automatizado para realização dos testes, preferencialmente junto à uma estrutura de CI/CD, como o GitHub Actions.
 - Utilização de arquivo com variáveis de ambiente para facilitar a execução e deploy do projeto em diferentes circunstâncias (desenvolvimento, teste, diferentes bases de dados, diferentes infraestruturas, etc).
 - Tratamento correto para as questões que envolvem o timezone.
+
 
