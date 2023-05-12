@@ -25,7 +25,6 @@ Segue a árvore de arquivos do projeto:
 .
 ├── app.py
 ├── create_test_database.py
-├── deploy_on_docker.sh
 ├── docker-compose.yml
 ├── Dockerfile
 ├── .dockerignore
@@ -48,8 +47,6 @@ Segue a árvore de arquivos do projeto:
 Quando usado o MySQL como banco de dados para a aplicação, toda a estrutura da base de dados é gerada com o `sql-migrate`, utilizando a sequência de comandos abaixo.
 
 Importante destacar que no ambiente "dockerizado" essa sequência de comandos já é automaticamente executada pelo entrypoint do serviço "web".
-
-
 
 ```
 flask db init
@@ -253,9 +250,16 @@ Nessa estrutura três serviços foram definidos:
 - **db**: MySQL, utilizando a imagem `mysql:8.0`. As variáveis de ambiente usadas pela imagem foram definidas no próprio arquivo do docker compose.
 
 
-## Considerações
+## Considerações e dificuldades encontradas
 
-## Dificuldades encontradas
+Destaco alguns pontos que considerei mais desafiadores no processo de desenvolvimento do projeto:
+
+- Falta de conhecimento do framework Flask, que embora não foi colocado como obrigatório o seu uso optei por ele por ter ciência de que a empres utiliza em seus produtos. Embora alguns conceitos se assemelhem ao do framework Django, com que vinha trabalhando, suas implementações são bastante diferentes.
+- Dificuldade na escolha da utilização das bibliotecas adequadas. Acabei fazendo confusão entre bibliotecas com mesmo propósito com nomes parecidos (ex: Flask-Marshmallow e marshmallow, sql-migrate e Flask-Migrate, etc).
+- Refatoramento para utilização do serializer marshmallow.
+- Pouco conhecimento em testes.
+- Dificuldades em manter o ambiente nos variados cenários (stand-alone, docker compose, etc).
+ 
 
 ## Pendências e pontos de melhoria
 
@@ -266,6 +270,7 @@ Alguns ajustes e implementações ainda carecem de finalização. Seguem alguns 
 - Implementação de mais testes, de preferência seguindo a prática de desenvolvimento orientado por testes.
 - Utilizar algum processo automatizado para realização dos testes, preferencialmente junto à uma estrutura de CI/CD, como o GitHub Actions.
 - Utilização de arquivo com variáveis de ambiente para facilitar a execução e deploy do projeto em diferentes circunstâncias (desenvolvimento, teste, diferentes bases de dados, diferentes infraestruturas, etc).
+- Ainda a respeito da utilização do env file, torna a publicação/compartilhamento do projeto mais seguro, mantendos senhas e dados de acessos nesse arquivo, que seria excluído do compartilhamento (incluído no .gitignore, poe exemplo).
 - Tratamento correto para as questões que envolvem o timezone.
 
 
